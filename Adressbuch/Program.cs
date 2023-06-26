@@ -17,45 +17,23 @@ namespace Adressbuch
             bool running = true;
             while (running)
             {
-                GetCommandFromConsole();      
+                GetCommandFromUI();
             }
         }
 
-        Command GetCommandFromConsole()
+        private Command GetCommandFromUI()
         {
-            Console.WriteLine("Choose what you want.");
-            PrintEnumToConsole();
-            return (Command)GetValidNumber();  
+            return IOInteraction.GetCommandFromConsole();
         }
 
-        int GetValidNumber()
-        {
-            int potentialValidNumber = GetIntFromConsole();
-            bool validNumber = false;
-            while (!validNumber)
-            {
-                if (IsNumberValid(potentialValidNumber))
-                {
-                    validNumber = true;
-                } else
-                {
-                    return GetValidNumber();
-                }
-            }
-            return potentialValidNumber;
-        }
+        
+    }
 
-        bool IsNumberValid(int numberToCheck)
+    public static class IOInteraction
+    {
+        private static void PrintEnumToConsole()
         {
-            if (numberToCheck > 0 && numberToCheck <= Enum.GetNames(typeof(Command)).Length)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        void PrintEnumToConsole()
-        {
+            Console.WriteLine("---------------------");
             int index = 1;
             foreach (Command item in Enum.GetValues(typeof(Command)))
             {
@@ -65,22 +43,52 @@ namespace Adressbuch
             Console.WriteLine("---------------------");
         }
 
-        int GetIntFromConsole()
+        public static Command GetCommandFromConsole()
+        {
+            Console.WriteLine("Choose what you want.");
+            PrintEnumToConsole();
+            return (Command)GetValidNumber();
+        }
+
+        private static int GetValidNumber()
+        {
+            int potentialValidNumber = GetIntFromConsole();
+            bool validNumber = false;
+            while (!validNumber)
+            {
+                if (IsNumberValid(potentialValidNumber))
+                {
+                    validNumber = true;
+                }
+                else
+                {
+                    return GetValidNumber();
+                }
+            }
+            return potentialValidNumber;
+        }
+
+        private static bool IsNumberValid(int numberToCheck)
+        {
+            if (numberToCheck > 0 && numberToCheck <= Enum.GetNames(typeof(Command)).Length)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private static int GetIntFromConsole()
         {
             string inputAsString = Console.ReadLine();
             if (Int32.TryParse(inputAsString, out int number))
             {
                 return number;
-            } else
+            }
+            else
             {
                 return GetIntFromConsole();
             }
         }
-    }
-
-    public static class IOInteraction
-    {
-
     }
 
     public enum Command
