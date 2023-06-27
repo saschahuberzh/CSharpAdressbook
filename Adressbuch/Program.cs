@@ -1,7 +1,12 @@
-﻿namespace Adressbuch
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace Adressbuch
 {
     public class App
     {
+        private DataModel dataModel;
 
         static void Main()
         {
@@ -12,11 +17,52 @@
         void StartProgram()
         {
             Console.WriteLine("Willkommen zum Adressbuch!");
+            this.dataModel = new DataModel();
             bool running = true;
             while (running)
             {
-                GetCommandFromUI();
+                Command command = GetCommandFromUI();
+                switch (command)
+                {
+                    case Command.SHOWALL:
+                        Console.WriteLine("Show all");
+                        HandleShowAll();
+                        break;
+                    case Command.SHOWBYID: 
+                        Console.WriteLine("Show by id");
+                        HandleShowOneById();
+                        break;
+                    case Command.ADD: 
+                        Console.WriteLine("Add");
+                        break;
+                    case Command.REMOVE:
+                        Console.WriteLine("Remove");
+                        break;
+                    case Command.UPDATE: 
+                        Console.WriteLine("Update");
+                        break;
+                    case Command.EXIT:
+                        Console.WriteLine("Exit");
+                        running = false;
+                        break;
+
+                }
             }
+        }
+
+        public void HandleShowAll()
+        {
+            IOInteraction.PrintAllAddressesToConsole(dataModel);
+        }
+
+        public void HandleShowOneById()
+        {
+            //dataModel.AadAddress(new Address(1, "dielsdorf"));
+            Predicate<int> predicate = address =>  true;    
+            int validId = IOInteraction.GetValidNumber(predicate);
+            Address address = dataModel.getAddressById(validId);
+            Console.WriteLine($"Id {validId} chosen");
+            //print to console
         }
 
         private Command GetCommandFromUI()
@@ -45,34 +91,26 @@
         {
             Console.WriteLine("Choose what you want.");
             PrintEnumToConsole();
-            return (Command)GetValidNumber();
+            Predicate<int> validNumbersForCommands = (int numberToCheck) => { return numberToCheck > 0 && numberToCheck <= Enum.GetNames(typeof(Command)).Length; };
+            return (Command)GetValidNumber(validNumbersForCommands);
         }
 
-        private static int GetValidNumber()
+        public static int GetValidNumber(Predicate<int> predicate)
         {
             int potentialValidNumber = GetIntFromConsole();
             bool validNumber = false;
             while (!validNumber)
             {
-                if (IsNumberValid(potentialValidNumber))
+                if(predicate(potentialValidNumber))
                 {
                     validNumber = true;
                 }
                 else
                 {
-                    return GetValidNumber();
+                    return GetValidNumber(predicate);
                 }
             }
             return potentialValidNumber;
-        }
-
-        private static bool IsNumberValid(int numberToCheck)
-        {
-            if (numberToCheck > 0 && numberToCheck <= Enum.GetNames(typeof(Command)).Length)
-            {
-                return true;
-            }
-            return false;
         }
 
         private static int GetIntFromConsole()
@@ -86,6 +124,70 @@
             {
                 return GetIntFromConsole();
             }
+        }
+
+        public static void PrintAllAddressesToConsole(DataModel data)
+        {
+            //data.AadAddress(new Address(1, "dielsdorf"));
+            data.GetAllAddresses().ForEach(address => PrintAddressToConsole(address));
+        }
+
+        public static void PrintAddressToConsole(Address address)
+        {
+            Console.WriteLine(address.ToString());
+        }
+    }
+
+    public class DataModel
+    {
+        List<Address> addressList;
+
+        public DataModel()
+        {
+            addressList = new List<Address>();
+        }
+
+        public List<Address> GetAllAddresses()
+        {
+            return addressList;
+        }
+
+        public void AadAddress(Address address)
+        {
+            addressList.Add(address);
+        }
+
+        public int AmountOfAddresses()
+        {
+            return addressList.Count;
+        }
+
+        public Address getAddressById(int id)
+        {
+            try
+            {
+                Console.WriteLine("here");
+                return addressList.Where(address => address.Id == id).ToList()[0];
+            } catch (Exception ex) {
+                throw ex;
+            } 
+        }
+    }
+
+    public class Address
+    {
+        public int Id { get; set; }
+        public string City { get; set; }
+
+        public Address(int id, string city)
+        {
+            this.Id = id;   
+            this.City = city;
+        }
+
+        public override string? ToString()
+        {
+            return $"Id: {Id}; City: {City}";
         }
     }
 
